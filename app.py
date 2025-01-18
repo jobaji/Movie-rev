@@ -3,6 +3,7 @@ import pickle as pk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from textblob import TextBlob
 import streamlit as st
+import numpy as np
 
 # App title
 st.title("🎥 Movie Review Sentiment Analysis App")
@@ -29,6 +30,7 @@ if st.button("Analyze"):
 
         # Predict sentiment using the Random Forest model
         prediction = rf_model.predict(transformed_review)
+        probabilities = rf_model.predict_proba(transformed_review)[0]  # Get probabilities for confidence scores
 
         # Map prediction to sentiment
         if prediction[0] == 0:
@@ -45,9 +47,27 @@ if st.button("Analyze"):
         st.write(f"Emotion: {emotion}")
         st.image(image_path, width=150)
 
+        # Display confidence score
+        confidence = max(probabilities) * 100
+        st.write(f"**Confidence Score:** {confidence:.2f}%")
+
         # Display polarity and subjectivity
         st.write(f"**TextBlob Polarity:** {polarity:.2f}")
         st.write(f"**TextBlob Subjectivity:** {subjectivity:.2f}")
+
+        # Explain the prediction by showing top influential words
+        st.subheader("Key Words Influencing the Prediction")
+        feature_names = vectorizer.get_feature_names_out()
+        feature_array = transformed_review.toarray()[0]
+        top_indices = np.argsort(feature_array)[::-1][:5]  # Top 5 features
+        top_words = [(feature_names[i], feature_array[i]) for i in top_indices if feature_array[i] > 0]
+
+        if top_words:
+            st.info("The following words had the most influence on the prediction:")
+            for word, importance in top_words:
+                st.info(f"- **{word}** (TF-IDF Score: {importance:.4f})")
+        else:
+            st.write("No significant words were found in this review.")
     else:
         st.warning("Please enter a valid review.")
 
