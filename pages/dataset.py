@@ -23,5 +23,3 @@ def main():
             st.write(f"**Number of Columns:** {data.shape[1]}")
         except Exception as e:
             st.error(f"Error loading dataset: {e}")
-    else:
-        st.info("Please upload a dataset to proceed.")
